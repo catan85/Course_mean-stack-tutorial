@@ -13,11 +13,15 @@ export class MessageService {
     messageIsEdit = new EventEmitter<Message>();
 
     addMessage(message: Message) {
-        this.messages.push(message);
         const body = JSON.stringify(message);
         const headers = new Headers({'Content-type': 'application/json'});
         return this.http.post('http://localhost:3000/message',body, {headers: headers})
-            .map((response: Response) => { return response.json();})
+            .map((response: Response) => { 
+                const result = response.json();
+                const message = new Message(result.obj.content,'Dummy', result.obj._id, null);
+                this.messages.push(message);
+                return message;   
+            })
                     // nel caso di errore si deve creare un Observable 
                     // manualmente mentre nel caso di risposta positiva 
                     // viene creato automaticamente
@@ -33,7 +37,7 @@ export class MessageService {
                     transformedMessages.push(new Message(
                         message.content, 
                         'Dummy',
-                        message.id, 
+                        message._id, 
                         null));
                 }
                 this.messages = transformedMessages;
@@ -48,6 +52,11 @@ export class MessageService {
     }
 
     updateMessage(message: Message){
+        const body = JSON.stringify(message);
+        const headers = new Headers({'Content-type': 'application/json'});
+        return this.http.patch('http://localhost:3000/message/' + message.messageId,body, {headers: headers})
+            .map((response: Response) => { return response.json();})
+            .catch((error:Response) => Observable.throw(error.json()));
         
     }
 
