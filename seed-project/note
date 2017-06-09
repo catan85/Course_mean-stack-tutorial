@@ -1,5 +1,0 @@
-avvio del frontend:
-    npm run build
-
-avvio del backend:
-    npm start
