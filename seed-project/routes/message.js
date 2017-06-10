@@ -6,6 +6,10 @@ var User = require('../models/user');
 
 router.get('/', function (req,res,next){
     Message.find()
+        // populate è un metodo di mongoose che serve
+        // a popolare nel messaggio i campi collegati 
+        // tramite il riferimento all'utente
+        .populate('user', 'firstName')
         .exec(function(err,messages){
             if (err){
                 return res.status(500).json({
@@ -24,14 +28,12 @@ router.get('/', function (req,res,next){
 // questa route tramite la use intercetta tutte le altre
 // ed esegue il controllo del token
 router.use('/', function(req, res, next) {
-    console.log('verifying token..');
     jwt.verify(req.query.token,'secret', function(err, decoded){
         if (err){
             return res.status(401).json({title: 'Not Authenticated', error : err});
         }
         // al termine si passa il next per proseguire con
         // il metodo che era stato richiesto (get, post ecc.)
-        console.log('authenticated');
         next();
     })
 });
@@ -76,6 +78,8 @@ router.post('/', function (req,res,next) {
 });
 
 router.patch('/:id', function (req, res, next) {
+    var decoded = jwt.decode(req.query.token);
+
     Message.findById(req.params.id, function (err, message) {
         if (err) {
             return res.status(500).json({
@@ -89,6 +93,14 @@ router.patch('/:id', function (req, res, next) {
                 error: {message: 'Message not found'}
             });
         }
+
+        if (message.user != decoded.user._id){
+            return res.status(500).json({
+                title: 'An error occurred',
+                error: {message: 'Users do not match'}
+            });
+        }
+
         message.content = req.body.content;
         message.save(function(err, result) {
             if (err) {
@@ -106,6 +118,7 @@ router.patch('/:id', function (req, res, next) {
 });
 
 router.delete('/:id', function(req,res,next){
+    decoded = jwt.decode(req.query.token);
     Message.findById(req.params.id, function (err, message) {
         if (err) {
             return res.status(500).json({
@@ -119,6 +132,14 @@ router.delete('/:id', function(req,res,next){
                 error: {message: 'Message not found'}
             });
         }
+
+        if (message.user != decoded.user._id){
+            return res.status(500).json({
+                title: 'An error occurred',
+                error: {message: 'Users do not match'}
+            });
+        }
+
         message.remove(function(err, result) {
             if (err) {
                 return res.status(500).json({
