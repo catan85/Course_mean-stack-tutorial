@@ -1,4 +1,4 @@
-import { Component, Input} from "@angular/core";
+import { Component, Input } from "@angular/core";
 
 import { Message } from "./message.model";
 import { MessageService } from "./message.service";
@@ -37,7 +37,7 @@ export class MessageComponent {
             );
     }
 
-    belongsToUser(){
+    belongsToUser() {
         return localStorage.getItem('userId') == this.message.userId;
     }
 }
